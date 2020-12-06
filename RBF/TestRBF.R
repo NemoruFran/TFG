@@ -2,6 +2,7 @@
 library("dplyr") 
 library(cluster)
 library("MLmetrics")
+library(mccr)
 source("GowerFunction.R")
 
 setwd("/home/fran/TFG/RBF")
@@ -220,6 +221,11 @@ print(error_percent)
 f1.1 <- F1_Score(testpred,predicted.classes)
 f1.1
 
+#Mathew's Score
+
+mccr1 <- mccr(testpred,predicted.classes)
+mccr1
+
 #Approach 2 -> Test with cluster centroids
 
 smp_size <- floor(0.75 * dims[1])
@@ -229,8 +235,8 @@ train_ind <- sample(seq_len(dims[1]), size = smp_size)
 train2 <- rbfdatasig2[train_ind, ]
 test2 <- rbfdatasig2[-train_ind,-(m+1) ]
 
-trainpred <- numericdata[train_ind,"target"]
-testpred <- numericdata[-train_ind, "target"]
+trainpred2 <- numericdata[train_ind,"target"]
+testpred2 <- numericdata[-train_ind, "target"]
 
 formulastring2 <- "target ~ "
 for (i in 1:m)
@@ -250,20 +256,25 @@ probabilities2 <- predict(model2,data.frame(test2),type ="response")
 predicted.classes2 <- ifelse(probabilities > 0.5, 1 , 0)
 
 #Error %
-error_count <- 0
+error_count2 <- 0
 
-for (i in 1:length(testpred))
+for (i in 1:length(testpred2))
 {
-  if(predicted.classes2[i] != testpred[i]) error_count <- error_count + 1
+  if(predicted.classes2[i] != testpred2[i]) error_count2 <- error_count2 + 1
 }
 
-error_percent2 = error_count / length(testpred)
+error_percent2 = error_count2 / length(testpred2)
 print(error_percent2)
 
 # F1 Score
 
 f1.2 <- F1_Score(testpred,predicted.classes2)
 f1.2
+
+# Mathew's Score
+
+mccr2 <- mccr(testpred,predicted.classes2)
+mccr2
 
 
 #------------ Comparison with standard logistic regression --------------
@@ -278,9 +289,16 @@ test3 <- df[-train_ind,-ncol(df)]
 trainpred3 <- df[train_ind,"target"]
 testpred3 <- df[-train_ind,"target"]
 
+vars <- colnames(df[,-ncol(df)])
+formulastring3 <- "target ~ "
+for (i in 1:length(vars))
+{
+  if(i != length(vars)) strformula <- sprintf("%s + ",vars[i])
+  else strformula <- sprintf("%s",vars[i])
+  formulastring3 <- paste(formulastring3,strformula,sep="")
+}
 
-
-model3 <- glm(formula = formulastring3, data = train3,family = binomial)
+model3 <- glm(formula = as.formula(formulastring3), data = train3,family = binomial)
 
 summary(model3)
 
@@ -296,11 +314,17 @@ for (i in 1:length(testpred3))
 }
 
 error_percent3 = error_count3 / length(testpred3)
+error_percent3
 
 # F1 Score
 
 f1.3 <- F1_Score(testpred3,predicted.classes3)
 f1.3
+
+#Mathew's Score
+
+mccr3 <- mccr(testpred3,predicted.classes3)
+mccr3
 
 #------------------------ Comparison with KNN ----------------------
 k <- 5
@@ -338,6 +362,9 @@ error_percent4
 f1.4 <- F1_Score(df$target,predicted.classes4)
 f1.4
 
+#Mathew's Correlation Coefficient
+mccr4 <- mccr(df$target,predicted.classes4)
+mccr4 
 
 #-------------------- Comparison with normal RBF -------------------
 
