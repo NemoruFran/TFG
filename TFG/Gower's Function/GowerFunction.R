@@ -3,39 +3,12 @@ library(Rcpp)
 
 library("dplyr") #not necessary
 library(cluster) #not necessary
-source("http://addictedtor.free.fr/packages/A2R/lastVersion/R/code.R")
 
-setwd("/home/fran/TFG/Gower's Function")
-
-#Dataset preparation
-
-df <- read.table("Test.csv", header=T, sep=",")
-
-# ------- Procesado extra para testear ------------
-class(df[1,])
-df <- df[,-1]
-varnames <- dimnames(df)[[2]]
-varnames
-df[,3] <- as.ordered(df[,3])
-write.csv(df,file ="Test.csv")
-class(df[,3])
-df[1,1] <- NA
-x <- data.matrix(df)
-y <- c("age","sex","education")
-z <- as.integer(y)
-varnames[2]
-dat <- df[y]
-# -------------------------------------------------
-#Also their types to make the correct Gower's coefficient calculus
-
-bins <- c()
-ords <- c()
-comp <- c(1,2)
-is.null(ords)
+sourceCpp("/home/fran/TFG/Gower's Function/GowerFunctionC++.cc")
 
 GowerRBF <- function (df, ords = c(), bins = c(), comp = c()) #, cycs)
 {
-  if(length(dx <- dim(df)) != 2 || !is.data.frame(df)) stop("df is not a dataframe!")
+  if(length(dx <- dim(df)) != 2) stop("df is not a dataframe!")
   
   variables <- dx[2]
   records <- dx[1]
@@ -100,22 +73,6 @@ GowerRBF <- function (df, ords = c(), bins = c(), comp = c()) #, cycs)
   full[!lower.tri(full, diag = TRUE)] <- diss
   return(full)
 }
-
-Ecsdi <- GowerRBF(df)
-
-types <- sapply(df, data.class)
-class(types)
-types
-
-sourceCpp("/home/fran/TFG/Gower's Function/GowerFunctionC++.cc")
-
-variables <- dim(df)[2]
-records <- dim(df)[1]
-Initialization <- matrix(-1,records,records)
-
-#DistMatrix <- GowerDist(df,types,variables,records,Initialization)
-dissimMatrix <- daisy(df, metric = "gower", stand=TRUE)
-#dim(dissimMatrix)
 
 
 
